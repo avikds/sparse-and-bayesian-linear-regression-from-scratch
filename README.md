@@ -26,6 +26,8 @@ python scaffold.py
 - [x] **14.** lasso_kkt_violation
 - [x] **15.** lasso_knots
 - [x] **16.** fista
+- [x] **17.** block_signal
+- [x] **18.** sensing_problem
 
 ---
 

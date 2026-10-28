@@ -685,3 +685,53 @@ def fista(X, y, prox, lam, L, n_iter=500):
 
     return w
 
+# Step 17 - block_signal
+def block_signal(D, block_size, n_active, seed, kind="sign"):
+    """Generate a block-sparse signal and its group assignments."""
+    rng = np.random.default_rng(seed)
+    n_blocks = D // block_size
+
+    # Select active blocks without replacement and sort them.
+    active = np.sort(rng.choice(n_blocks, n_active, replace=False))
+
+    # Generate all active values at once, following the specified RNG order.
+    if kind == "sign":
+        values = rng.choice([-1.0, 1.0], size=n_active * block_size)
+    elif kind == "gaussian":
+        values = rng.standard_normal(n_active * block_size)
+    elif kind == "ones":
+        values = np.ones(n_active * block_size, dtype=float)
+    else:
+        raise ValueError("kind must be 'sign', 'gaussian', or 'ones'")
+
+    # Place consecutive chunks of values into the active blocks.
+    w = np.zeros(D, dtype=float)
+    for i, block in enumerate(active):
+        start = int(block) * block_size
+        end = start + block_size
+        value_start = i * block_size
+        value_end = value_start + block_size
+        w[start:end] = values[value_start:value_end]
+
+    groups = np.arange(D) // block_size
+    return w, groups
+
+# Step 18 - sensing_problem
+def sensing_problem(w_true, N, noise, seed):
+    """Generate noisy measurements using an orthonormal-row sensing matrix."""
+    w_true = np.asarray(w_true, dtype=float)
+    D = w_true.shape[0]
+    rng = np.random.default_rng(seed)
+
+    # Generate the random design matrix.
+    A = rng.standard_normal((N, D))
+
+    # Orthonormalize the rows using Cholesky factorization and a linear solve.
+    Lc = np.linalg.cholesky(A @ A.T)
+    X = np.linalg.solve(Lc, A)
+
+    # Generate noisy measurements using the same random generator.
+    y = X @ w_true + noise * rng.standard_normal(N)
+
+    return X, y
+
