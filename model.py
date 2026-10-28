@@ -427,3 +427,51 @@ def soft_threshold(x, delta):
     delta = np.asarray(delta, dtype=float)
     return np.sign(x) * np.maximum(np.abs(x) - delta, 0.0)
 
+# Step 12 - lasso_cd
+def lasso_cd(X, y, lam, w0=None, max_sweeps=1000, tol=1e-8):
+    """Minimize the lasso objective using cyclic coordinate descent."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    N, D = X.shape
+
+    # Initialize weights without modifying the caller's array.
+    if w0 is None:
+        w = np.zeros(D, dtype=float)
+    else:
+        w = np.asarray(w0, dtype=float).copy()
+
+    # Maintain the residual r = y - X @ w incrementally.
+    residual = y - X @ w
+    col_norms_sq = np.sum(X * X, axis=0)
+
+    for sweep in range(1, max_sweeps + 1):
+        max_change = 0.0
+
+        for d in range(D):
+            a_d = col_norms_sq[d]
+
+            # Skip zero columns, leaving their weights unchanged.
+            if a_d == 0.0:
+                continue
+
+            # Restore the contribution of the current coordinate.
+            residual += X[:, d] * w[d]
+
+            # Correlation with the residual excluding feature d.
+            c_d = float(X[:, d] @ residual)
+
+            # Update the coordinate using soft thresholding.
+            new_w_d = float(soft_threshold(c_d, lam) / a_d)
+
+            # Update the residual using the change in this coordinate.
+            residual -= X[:, d] * new_w_d
+
+            max_change = max(max_change, abs(new_w_d - w[d]))
+            w[d] = new_w_d
+
+        # Stop after the first complete sweep with a sufficiently small change.
+        if max_change < tol:
+            return w, sweep
+
+    return w, max_sweeps
+
