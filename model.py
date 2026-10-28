@@ -985,3 +985,39 @@ def blr_predictive(X_test, mN, SN, sigma2):
 
     return mean, var
 
+# Step 29 - predictive_nll_report
+def predictive_nll_report(X_train, y_train, X_test, y_test, sigma2, tau2):
+    """Compare plug-in and Bayesian predictive negative log-likelihoods."""
+    X_train = np.asarray(X_train, dtype=float)
+    y_train = np.asarray(y_train, dtype=float).reshape(-1)
+    X_test = np.asarray(X_test, dtype=float)
+    y_test = np.asarray(y_test, dtype=float).reshape(-1)
+
+    D = X_train.shape[1]
+
+    # Plug-in prediction using ordinary least squares.
+    w_hat = ols_svd(X_train, y_train)
+    mean_plugin = X_test @ w_hat
+    var_plugin = np.full(y_test.shape, sigma2, dtype=float)
+
+    # Bayesian posterior with a zero-mean isotropic Gaussian prior.
+    m0 = np.zeros(D, dtype=float)
+    S0 = tau2 * np.eye(D)
+    mN, SN = blr_posterior(X_train, y_train, m0, S0, sigma2)
+    mean_bayes, var_bayes = blr_predictive(X_test, mN, SN, sigma2)
+
+    # Mean Gaussian negative log-likelihood on held-out observations.
+    nll_plugin = np.mean(
+        0.5 * np.log(2.0 * np.pi * var_plugin)
+        + (y_test - mean_plugin) ** 2 / (2.0 * var_plugin)
+    )
+    nll_bayes = np.mean(
+        0.5 * np.log(2.0 * np.pi * var_bayes)
+        + (y_test - mean_bayes) ** 2 / (2.0 * var_bayes)
+    )
+
+    return {
+        "plugin": float(nll_plugin),
+        "bayes": float(nll_bayes),
+    }
+

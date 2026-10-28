@@ -38,6 +38,7 @@ python scaffold.py
 - [x] **26.** blr_posterior
 - [x] **27.** blr_sequential
 - [x] **28.** blr_predictive
+- [x] **29.** predictive_nll_report
 
 ---
 
