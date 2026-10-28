@@ -222,3 +222,21 @@ def ols_qr(X, y):
     # Solve Rw = Q.T @ y using the back-substitution function from Step 3.
     return back_substitute(R, Q.T @ y)
 
+# Step 5 - ols_svd
+def ols_svd(X, y, rcond=1e-12):
+    """Compute the minimum-norm least-squares solution using the thin SVD."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    # Factor X = U @ diag(s) @ Vt.
+    U, s, Vt = np.linalg.svd(X, full_matrices=False)
+
+    # Retain singular values above the relative cutoff.
+    if s.size == 0:
+        return np.zeros(X.shape[1], dtype=float)
+
+    keep = s > rcond * s[0]
+
+    # Compute the minimum-norm solution using only retained singular values.
+    return Vt[keep, :].T @ ((U[:, keep].T @ y) / s[keep])
+
