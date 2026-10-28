@@ -11,6 +11,7 @@ python scaffold.py
 ## Steps
 
 - [x] **1.** load_prostate
+- [x] **2.** ols_normal
 
 ---
 

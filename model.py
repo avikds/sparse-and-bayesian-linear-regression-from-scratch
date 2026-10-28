@@ -170,3 +170,29 @@ def load_prostate():
         "y_mean": y_mean,
     }
 
+# Step 2 - ols_normal
+def ols_normal(X, y):
+    """
+    Solve ordinary least squares using the normal equations.
+
+    Parameters
+    ----------
+    X : array-like, shape (N, D)
+        Design matrix.
+    y : array-like, shape (N,)
+        Target vector.
+
+    Returns
+    -------
+    w : ndarray, shape (D,)
+        Least-squares weight vector.
+    """
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    # Solve (X.T @ X) @ w = X.T @ y without forming an inverse.
+    A = X.T @ X
+    b = X.T @ y
+
+    return np.linalg.solve(A, b)
+
