@@ -22,6 +22,7 @@ python scaffold.py
 - [x] **10.** cv_ridge
 - [x] **11.** soft_threshold
 - [x] **12.** lasso_cd
+- [x] **13.** lasso_path
 
 ---
 

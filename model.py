@@ -475,3 +475,25 @@ def lasso_cd(X, y, lam, w0=None, max_sweeps=1000, tol=1e-8):
 
     return w, max_sweeps
 
+# Step 13 - lasso_path
+def lasso_path(X, y, n_lambdas=50, eps=1e-3, tol=1e-8):
+    """Compute the lasso regularization path using warm-started coordinate descent."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    # Maximum penalty for which the all-zero solution is optimal.
+    lam_max = float(np.max(np.abs(X.T @ y)))
+
+    # Generate penalties from lam_max down to eps * lam_max.
+    lams = lam_max * np.logspace(0, np.log10(eps), n_lambdas)
+
+    # Fit each penalty, initializing from the previous solution.
+    W = np.zeros((n_lambdas, X.shape[1]), dtype=float)
+    w = None
+
+    for k, lam in enumerate(lams):
+        w, _ = lasso_cd(X, y, lam, w0=w, tol=tol)
+        W[k] = w
+
+    return lams, W
+
