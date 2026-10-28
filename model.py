@@ -497,3 +497,23 @@ def lasso_path(X, y, n_lambdas=50, eps=1e-3, tol=1e-8):
 
     return lams, W
 
+# Step 14 - lasso_kkt_violation
+def lasso_kkt_violation(X, y, w, lam):
+    """Return the maximum KKT optimality violation for the lasso solution."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    w = np.asarray(w, dtype=float)
+
+    # Correlation between each feature and the current residual.
+    g = X.T @ (y - X @ w)
+
+    # Nonzero weights require g_d = lam * sign(w_d).
+    active = w != 0.0
+    violations = np.empty_like(w, dtype=float)
+    violations[active] = np.abs(g[active] - lam * np.sign(w[active]))
+
+    # Zero weights require |g_d| <= lam.
+    violations[~active] = np.maximum(np.abs(g[~active]) - lam, 0.0)
+
+    return float(np.max(violations)) if violations.size else 0.0
+

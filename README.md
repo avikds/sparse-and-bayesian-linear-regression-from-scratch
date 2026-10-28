@@ -23,6 +23,7 @@ python scaffold.py
 - [x] **11.** soft_threshold
 - [x] **12.** lasso_cd
 - [x] **13.** lasso_path
+- [x] **14.** lasso_kkt_violation
 
 ---
 
