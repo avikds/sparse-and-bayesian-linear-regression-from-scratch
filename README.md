@@ -32,6 +32,7 @@ python scaffold.py
 - [x] **20.** recovery_report
 - [x] **21.** group_soft_threshold
 - [x] **22.** elastic_net
+- [x] **23.** lad_lp
 
 ---
 

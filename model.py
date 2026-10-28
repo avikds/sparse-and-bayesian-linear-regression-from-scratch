@@ -826,3 +826,42 @@ def elastic_net(X, y, lam1, lam2, tol=1e-10, max_sweeps=5000):
     # Transform the coefficients back to the elastic-net solution.
     return c * w_scaled
 
+# Step 23 - lad_lp
+def lad_lp(X, y):
+    """Fit least absolute deviations regression using linear programming."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float).reshape(-1)
+    N, D = X.shape
+
+    # Variables are v = (w_1, ..., w_D, e_1, ..., e_N).
+    c = np.concatenate((np.zeros(D), np.ones(N)))
+
+    # Construct the 2N interleaved inequality constraints.
+    A = np.zeros((2 * N, D + N), dtype=float)
+    b = np.empty(2 * N, dtype=float)
+
+    for i in range(N):
+        # x_i @ w - e_i <= y_i
+        A[2 * i, :D] = X[i]
+        A[2 * i, D + i] = -1.0
+        b[2 * i] = y[i]
+
+        # -x_i @ w - e_i <= -y_i
+        A[2 * i + 1, :D] = -X[i]
+        A[2 * i + 1, D + i] = -1.0
+        b[2 * i + 1] = -y[i]
+
+    # All variables are declared free; the constraints enforce e_i >= |y_i - x_i @ w|.
+    result = linprog(
+        c,
+        A_ub=A,
+        b_ub=b,
+        bounds=[(None, None)] * (D + N),
+        method="highs"
+    )
+
+    if not result.success:
+        raise RuntimeError(f"LAD linear program failed: {result.message}")
+
+    return result.x[:D]
+
