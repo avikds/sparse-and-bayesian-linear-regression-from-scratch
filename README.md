@@ -30,6 +30,7 @@ python scaffold.py
 - [x] **18.** sensing_problem
 - [x] **19.** debias
 - [x] **20.** recovery_report
+- [x] **21.** group_soft_threshold
 
 ---
 

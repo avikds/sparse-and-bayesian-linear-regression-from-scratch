@@ -784,3 +784,20 @@ def recovery_report(w_hat, w_true, thresh=1e-6):
         "missed": missed,
     }
 
+# Step 21 - group_soft_threshold
+def group_soft_threshold(v, groups, t):
+    """Apply group-wise soft thresholding for the group-lasso penalty."""
+    v = np.asarray(v, dtype=float)
+    groups = np.asarray(groups)
+
+    out = np.zeros_like(v, dtype=float)
+
+    for g in np.unique(groups):
+        mask = groups == g
+        group_norm = np.linalg.norm(v[mask])
+
+        if group_norm > t:
+            out[mask] = (1.0 - t / group_norm) * v[mask]
+
+    return out
+
