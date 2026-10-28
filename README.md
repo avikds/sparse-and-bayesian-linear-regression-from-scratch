@@ -29,6 +29,7 @@ python scaffold.py
 - [x] **17.** block_signal
 - [x] **18.** sensing_problem
 - [x] **19.** debias
+- [x] **20.** recovery_report
 
 ---
 

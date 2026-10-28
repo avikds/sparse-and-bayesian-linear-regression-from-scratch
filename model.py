@@ -757,3 +757,30 @@ def debias(X, y, w_hat, thresh=1e-6):
 
     return w
 
+# Step 20 - recovery_report
+def recovery_report(w_hat, w_true, thresh=1e-6):
+    """Evaluate estimation error and support recovery for a sparse signal."""
+    w_hat = np.asarray(w_hat, dtype=float)
+    w_true = np.asarray(w_true, dtype=float)
+
+    # Mean squared error across all coordinates.
+    mse = float(np.mean((w_hat - w_true) ** 2))
+
+    # Identify selected and truly active coordinates.
+    selected_mask = np.abs(w_hat) > thresh
+    active_mask = w_true != 0.0
+
+    # Count support recovery outcomes.
+    selected = int(np.count_nonzero(selected_mask))
+    true_pos = int(np.count_nonzero(selected_mask & active_mask))
+    false_pos = int(np.count_nonzero(selected_mask & ~active_mask))
+    missed = int(np.count_nonzero(~selected_mask & active_mask))
+
+    return {
+        "mse": mse,
+        "selected": selected,
+        "true_pos": true_pos,
+        "false_pos": false_pos,
+        "missed": missed,
+    }
+
