@@ -24,6 +24,7 @@ python scaffold.py
 - [x] **12.** lasso_cd
 - [x] **13.** lasso_path
 - [x] **14.** lasso_kkt_violation
+- [x] **15.** lasso_knots
 
 ---
 

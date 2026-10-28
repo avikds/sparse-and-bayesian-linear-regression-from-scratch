@@ -517,3 +517,146 @@ def lasso_kkt_violation(X, y, w, lam):
 
     return float(np.max(violations)) if violations.size else 0.0
 
+# Step 15 - lasso_knots
+def lasso_knots(X, y, tol=1e-10):
+    """Compute the lasso regularization path at every active-set knot."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float).reshape(-1)
+    N, D = X.shape
+
+    correlations = X.T @ y
+    lam_max = float(np.max(np.abs(correlations))) if D else 0.0
+
+    # At lambda_max, the lasso solution is the zero vector.
+    w = np.zeros(D, dtype=float)
+    lams = [lam_max]
+    W = [w.copy()]
+
+    if D == 0 or lam_max == 0.0:
+        return np.asarray(lams, dtype=float), np.asarray(W, dtype=float)
+
+    # Start with the feature having the largest absolute correlation.
+    j0 = int(np.argmax(np.abs(correlations)))
+    active = [j0]
+    signs = [float(np.sign(correlations[j0]))]
+    lam_current = lam_max
+
+    while lam_current > tol:
+        XA = X[:, active]
+
+        # On the current segment, w_A(lambda) = u - lambda * v.
+        gram = XA.T @ XA
+        rhs = XA.T @ y
+        sign_vec = np.asarray(signs, dtype=float)
+
+        try:
+            u = np.linalg.solve(gram, rhs)
+            v = np.linalg.solve(gram, sign_vec)
+        except np.linalg.LinAlgError:
+            u = np.linalg.lstsq(gram, rhs, rcond=None)[0]
+            v = np.linalg.lstsq(gram, sign_vec, rcond=None)[0]
+
+        # Collect candidate events: active weights leaving zero or
+        # inactive features joining the active set.
+        candidates = []
+
+        for k, j in enumerate(active):
+            if abs(v[k]) > tol:
+                lam_candidate = u[k] / v[k]
+                if tol < lam_candidate < lam_current - tol:
+                    candidates.append((float(lam_candidate), "leave", j, 0.0))
+
+        residual_u = y - XA @ u
+        for j in range(D):
+            if j in active:
+                continue
+
+            a_j = float(X[:, j] @ residual_u)
+            b_j = float(X[:, j] @ (XA @ v))
+
+            # Solve a_j + lambda*b_j = +lambda and = -lambda.
+            denom_pos = 1.0 - b_j
+            if abs(denom_pos) > tol:
+                lam_candidate = a_j / denom_pos
+                if tol < lam_candidate < lam_current - tol:
+                    candidates.append((float(lam_candidate), "join", j, 1.0))
+
+            denom_neg = 1.0 + b_j
+            if abs(denom_neg) > tol:
+                lam_candidate = -a_j / denom_neg
+                if tol < lam_candidate < lam_current - tol:
+                    candidates.append((float(lam_candidate), "join", j, -1.0))
+
+        if not candidates:
+            # The final knot is lambda = 0.
+            w = np.zeros(D, dtype=float)
+            w[active] = u
+
+            # For an underdetermined or overdetermined least-squares problem,
+            # use the minimum-norm least-squares solution at lambda = 0.
+            if D <= N:
+                w = np.linalg.lstsq(X, y, rcond=None)[0]
+
+            if lams[-1] > 0.0:
+                lams.append(0.0)
+                W.append(w.copy())
+            else:
+                W[-1] = w.copy()
+            break
+
+        # Move to the largest candidate below the current penalty.
+        lam_next = max(item[0] for item in candidates)
+
+        w = np.zeros(D, dtype=float)
+        w[active] = u - lam_next * v
+        lams.append(float(lam_next))
+        W.append(w.copy())
+
+        # Process all events occurring at this knot within tolerance.
+        events = [
+            item for item in candidates
+            if abs(item[0] - lam_next) <= tol
+        ]
+
+        # Remove variables whose coefficients reach zero.
+        for _, event_type, j, _ in events:
+            if event_type == "leave" and j in active:
+                k = active.index(j)
+                active.pop(k)
+                signs.pop(k)
+
+        # Add joining variables with the sign of their residual correlation.
+        residual = y - X @ w
+        for _, event_type, j, candidate_sign in events:
+            if event_type == "join" and j not in active:
+                corr = float(X[:, j] @ residual)
+                new_sign = float(np.sign(corr))
+                if new_sign == 0.0:
+                    new_sign = candidate_sign
+                active.append(j)
+                signs.append(new_sign)
+
+        lam_current = lam_next
+
+    # Ensure the returned path ends at lambda = 0.
+    if lams[-1] > 0.0:
+        if active:
+            XA = X[:, active]
+            gram = XA.T @ XA
+            try:
+                u = np.linalg.solve(gram, XA.T @ y)
+            except np.linalg.LinAlgError:
+                u = np.linalg.lstsq(gram, XA.T @ y, rcond=None)[0]
+            w = np.zeros(D, dtype=float)
+            w[active] = u
+        else:
+            w = np.zeros(D, dtype=float)
+
+        if D <= N:
+            w = np.linalg.lstsq(X, y, rcond=None)[0]
+
+        lams.append(0.0)
+        W.append(w.copy())
+
+    return np.asarray(lams, dtype=float), np.asarray(W, dtype=float)
+
