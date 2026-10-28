@@ -420,3 +420,10 @@ def cv_ridge(X, y, lams, n_folds=5):
     # Return mean squared prediction error over all N observations.
     return squared_errors / N
 
+# Step 11 - soft_threshold
+def soft_threshold(x, delta):
+    """Apply the soft-thresholding operator elementwise."""
+    x = np.asarray(x, dtype=float)
+    delta = np.asarray(delta, dtype=float)
+    return np.sign(x) * np.maximum(np.abs(x) - delta, 0.0)
+

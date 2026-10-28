@@ -20,6 +20,7 @@ python scaffold.py
 - [x] **8.** ridge_svd
 - [x] **9.** ridge_evidence
 - [x] **10.** cv_ridge
+- [x] **11.** soft_threshold
 
 ---
 
