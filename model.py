@@ -210,3 +210,15 @@ def back_substitute(R, b):
 
     return w
 
+# Step 4 - ols_qr
+def ols_qr(X, y):
+    """Solve least squares using the reduced QR decomposition."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    # Factor X = QR, where Q has orthonormal columns and R is upper triangular.
+    Q, R = np.linalg.qr(X, mode="reduced")
+
+    # Solve Rw = Q.T @ y using the back-substitution function from Step 3.
+    return back_substitute(R, Q.T @ y)
+
