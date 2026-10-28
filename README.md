@@ -39,6 +39,7 @@ python scaffold.py
 - [x] **27.** blr_sequential
 - [x] **28.** blr_predictive
 - [x] **29.** predictive_nll_report
+- [x] **30.** ard
 
 ---
 

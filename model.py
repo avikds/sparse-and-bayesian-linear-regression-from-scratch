@@ -1021,3 +1021,61 @@ def predictive_nll_report(X_train, y_train, X_test, y_test, sigma2, tau2):
         "bayes": float(nll_bayes),
     }
 
+# Step 30 - ard
+def ard(X, y, sigma2, n_iter=300, alpha_max=1e8):
+    """Fit Bayesian linear regression using automatic relevance determination."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float).reshape(-1)
+    N, D = X.shape
+    beta = 1.0 / sigma2
+
+    alpha = np.ones(D, dtype=float)
+    history = np.empty(n_iter, dtype=float)
+    identity_N = np.eye(N)
+
+    for iteration in range(n_iter):
+        # Keep features whose prior precision is below the pruning threshold.
+        active = alpha < alpha_max
+        Xk = X[:, active]
+        alpha_k = alpha[active]
+
+        # Posterior mean and covariance for the currently active features.
+        precision = np.diag(alpha_k) + beta * (Xk.T @ Xk)
+        S = np.linalg.solve(precision, np.eye(len(alpha_k)))
+        m = beta * (S @ Xk.T @ y)
+
+        # Log marginal likelihood: y ~ N(0, sigma2*I + Xk*diag(1/alpha_k)*Xk.T).
+        C = sigma2 * identity_N
+        if len(alpha_k) > 0:
+            C = C + (Xk / alpha_k[None, :]) @ Xk.T
+
+        sign, logdet = np.linalg.slogdet(C)
+        quadratic = float(y @ np.linalg.solve(C, y))
+        history[iteration] = -0.5 * (
+            N * np.log(2.0 * np.pi) + logdet + quadratic
+        )
+
+        # MacKay update for the active features' prior precisions.
+        if len(alpha_k) > 0:
+            gamma = np.maximum(1.0 - alpha_k * np.diag(S), 0.0)
+            m_squared = m ** 2
+            alpha_new = np.divide(
+                gamma,
+                m_squared,
+                out=np.full_like(gamma, alpha_max),
+                where=m_squared > np.finfo(float).tiny
+            )
+            alpha[active] = np.minimum(alpha_new, alpha_max)
+
+    # Recompute posterior means using the final set of retained features.
+    active = alpha < alpha_max
+    w = np.zeros(D, dtype=float)
+
+    if np.any(active):
+        Xk = X[:, active]
+        alpha_k = alpha[active]
+        precision = np.diag(alpha_k) + beta * (Xk.T @ Xk)
+        w[active] = beta * np.linalg.solve(precision, Xk.T @ y)
+
+    return w, alpha, history
+
