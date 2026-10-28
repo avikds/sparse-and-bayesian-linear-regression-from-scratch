@@ -973,3 +973,15 @@ def blr_sequential(X, y, m0, S0, sigma2):
 
     return means, covs
 
+# Step 28 - blr_predictive
+def blr_predictive(X_test, mN, SN, sigma2):
+    """Compute predictive means and variances for Bayesian linear regression."""
+    X_test = np.asarray(X_test, dtype=float)
+    mN = np.asarray(mN, dtype=float)
+    SN = np.asarray(SN, dtype=float)
+
+    mean = X_test @ mN
+    var = sigma2 + np.sum((X_test @ SN) * X_test, axis=1)
+
+    return mean, var
+

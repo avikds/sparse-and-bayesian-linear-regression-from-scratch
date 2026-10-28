@@ -37,6 +37,7 @@ python scaffold.py
 - [x] **25.** student_t_em
 - [x] **26.** blr_posterior
 - [x] **27.** blr_sequential
+- [x] **28.** blr_predictive
 
 ---
 
