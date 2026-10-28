@@ -36,6 +36,7 @@ python scaffold.py
 - [x] **24.** huber_irls
 - [x] **25.** student_t_em
 - [x] **26.** blr_posterior
+- [x] **27.** blr_sequential
 
 ---
 

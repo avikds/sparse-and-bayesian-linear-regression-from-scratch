@@ -946,3 +946,30 @@ def blr_posterior(X, y, m0, S0, sigma2):
 
     return mN, SN
 
+# Step 27 - blr_sequential
+def blr_sequential(X, y, m0, S0, sigma2):
+    """Update the Bayesian linear regression posterior one observation at a time."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float).reshape(-1)
+    m = np.asarray(m0, dtype=float).copy()
+    S = np.asarray(S0, dtype=float).copy()
+
+    N, D = X.shape
+    means = np.empty((N, D), dtype=float)
+    covs = np.empty((N, D, D), dtype=float)
+
+    for n in range(N):
+        # Update the posterior using the current observation and prior.
+        m, S = blr_posterior(
+            X[n:n + 1],
+            y[n:n + 1],
+            m,
+            S,
+            sigma2
+        )
+
+        means[n] = m
+        covs[n] = S
+
+    return means, covs
+
