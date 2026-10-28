@@ -240,3 +240,56 @@ def ols_svd(X, y, rcond=1e-12):
     # Compute the minimum-norm solution using only retained singular values.
     return Vt[keep, :].T @ ((U[:, keep].T @ y) / s[keep])
 
+# Step 6 - conditioning_report
+def conditioning_report(degrees, n_points=50):
+    """Compare least-squares solvers as the polynomial design becomes ill-conditioned."""
+    results = []
+    x = np.linspace(0.0, 1.0, n_points)
+
+    for p in degrees:
+        # Build the Vandermonde matrix with columns 1, x, ..., x**p.
+        X = np.vander(x, N=p + 1, increasing=True)
+
+        # Use known weights and generate a noise-free response.
+        w_true = np.ones(p + 1, dtype=float)
+        y = X @ w_true
+
+        # Measure the condition number of the design matrix.
+        log10_cond = float(np.log10(np.linalg.cond(X)))
+
+        # Fit using each least-squares solver.
+        w_normal = ols_normal(X, y)
+        w_qr = ols_qr(X, y)
+        w_svd = ols_svd(X, y)
+
+        # Relative coefficient errors.
+        true_norm = np.linalg.norm(w_true)
+        normal_error = float(np.linalg.norm(w_normal - w_true) / true_norm)
+        qr_error = float(np.linalg.norm(w_qr - w_true) / true_norm)
+        svd_error = float(np.linalg.norm(w_svd - w_true) / true_norm)
+
+        results.append({
+            "degree": int(p),
+            "log10_cond": log10_cond,
+            "normal": normal_error,
+            "qr": qr_error,
+            "svd": svd_error,
+        })
+
+    return results
+
+# Step 7 - ridge_augmented
+def ridge_augmented(X, y, lam):
+    """Fit ridge regression using least squares on augmented data."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    N, D = X.shape
+
+    # Append virtual observations to penalize the squared weight norm.
+    X_aug = np.vstack((X, np.sqrt(lam) * np.eye(D)))
+    y_aug = np.concatenate((y, np.zeros(D)))
+
+    # Solve the augmented least-squares problem using the existing QR solver.
+    return ols_qr(X_aug, y_aug)
+
