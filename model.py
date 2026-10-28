@@ -318,3 +318,74 @@ def ridge_svd(X, y, lams):
 
     return W, dof
 
+# Step 9 - ridge_evidence
+def ridge_evidence(X, y, n_iter=500, tol=1e-10):
+    """Choose the ridge penalty by maximizing the marginal likelihood."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    N, D = X.shape
+
+    # Initialize prior precision and noise precision.
+    alpha = 1.0
+    beta = 1.0 / np.var(y)
+
+    eps = np.finfo(float).eps
+
+    # MacKay fixed-point updates.
+    for _ in range(n_iter):
+        lam = alpha / beta
+
+        # Obtain the ridge solution and effective degrees of freedom.
+        W, dofs = ridge_svd(X, y, lam)
+        m = W[0]
+        gamma = float(dofs[0])
+
+        # Update the prior and noise precisions.
+        alpha_new = gamma / max(float(m @ m), eps)
+        residual = y - X @ m
+        beta_new = (N - gamma) / max(float(residual @ residual), eps)
+
+        # Stop when both relative changes are sufficiently small.
+        alpha_change = abs(alpha_new - alpha) / max(abs(alpha), eps)
+        beta_change = abs(beta_new - beta) / max(abs(beta), eps)
+
+        alpha, beta = alpha_new, beta_new
+
+        if alpha_change <= tol and beta_change <= tol:
+            break
+
+    # Recompute the solution and degrees of freedom at final precisions.
+    lam = alpha / beta
+    W, dofs = ridge_svd(X, y, lam)
+    m = W[0]
+    gamma = float(dofs[0])
+
+    # Calculate the residual and regularization contributions to E(m).
+    residual = y - X @ m
+    E_m = 0.5 * beta * float(residual @ residual)
+    E_m += 0.5 * alpha * float(m @ m)
+
+    # Eigenvalues of X.T @ X are the squared singular values of X.
+    singular_values = np.linalg.svd(X, compute_uv=False)
+    eigenvalues = singular_values ** 2
+
+    # Pad with zero eigenvalues if the number of features exceeds N.
+    if D > len(eigenvalues):
+        eigenvalues = np.pad(eigenvalues, (0, D - len(eigenvalues)))
+
+    log_evidence = (
+        0.5 * D * np.log(alpha)
+        + 0.5 * N * np.log(beta)
+        - E_m
+        - 0.5 * np.sum(np.log(alpha + beta * eigenvalues))
+        - 0.5 * N * np.log(2.0 * np.pi)
+    )
+
+    return {
+        "lam": float(lam),
+        "alpha": float(alpha),
+        "beta": float(beta),
+        "gamma": float(gamma),
+        "log_evidence": float(log_evidence),
+    }
+
