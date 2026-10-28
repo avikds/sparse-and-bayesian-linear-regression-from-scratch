@@ -660,3 +660,28 @@ def lasso_knots(X, y, tol=1e-10):
 
     return np.asarray(lams, dtype=float), np.asarray(W, dtype=float)
 
+# Step 16 - fista
+def fista(X, y, prox, lam, L, n_iter=500):
+    """Minimize 0.5 * ||y - Xw||^2 + penalty(w) using FISTA."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    D = X.shape[1]
+
+    w = np.zeros(D, dtype=float)
+    z = w.copy()
+    t = 1.0
+
+    for _ in range(n_iter):
+        # Gradient step evaluated at the extrapolated point z.
+        gradient = X.T @ (X @ z - y)
+        w_new = prox(z - gradient / L, lam / L)
+
+        # Nesterov acceleration.
+        t_new = (1.0 + np.sqrt(1.0 + 4.0 * t * t)) / 2.0
+        z = w_new + ((t - 1.0) / t_new) * (w_new - w)
+
+        w = w_new
+        t = t_new
+
+    return w
+
