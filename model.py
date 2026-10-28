@@ -389,3 +389,34 @@ def ridge_evidence(X, y, n_iter=500, tol=1e-10):
         "log_evidence": float(log_evidence),
     }
 
+# Step 10 - cv_ridge
+def cv_ridge(X, y, lams, n_folds=5):
+    """Estimate ridge prediction error using K-fold cross-validation."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    lams = np.atleast_1d(np.asarray(lams, dtype=float))
+
+    N = X.shape[0]
+    squared_errors = np.zeros(len(lams), dtype=float)
+
+    # Assign rows deterministically: row i belongs to fold i % n_folds.
+    fold_ids = np.arange(N) % n_folds
+
+    for k in range(n_folds):
+        test_mask = fold_ids == k
+        train_mask = ~test_mask
+
+        X_train, y_train = X[train_mask], y[train_mask]
+        X_test, y_test = X[test_mask], y[test_mask]
+
+        # Fit all penalty values on the training folds using one SVD.
+        W, _ = ridge_svd(X_train, y_train, lams)
+
+        # Accumulate the squared prediction errors for each penalty.
+        predictions = X_test @ W.T
+        errors = predictions - y_test[:, None]
+        squared_errors += np.sum(errors ** 2, axis=0)
+
+    # Return mean squared prediction error over all N observations.
+    return squared_errors / N
+

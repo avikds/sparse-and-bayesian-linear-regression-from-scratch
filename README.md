@@ -19,6 +19,7 @@ python scaffold.py
 - [x] **7.** ridge_augmented
 - [x] **8.** ridge_svd
 - [x] **9.** ridge_evidence
+- [x] **10.** cv_ridge
 
 ---
 
