@@ -735,3 +735,25 @@ def sensing_problem(w_true, N, noise, seed):
 
     return X, y
 
+# Step 19 - debias
+def debias(X, y, w_hat, thresh=1e-6):
+    """Remove lasso shrinkage by refitting least squares on the selected support."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    w_hat = np.asarray(w_hat, dtype=float)
+
+    D = X.shape[1]
+    w = np.zeros(D, dtype=float)
+
+    # Select features whose estimated coefficients exceed the threshold.
+    support = np.abs(w_hat) > thresh
+
+    # Return zeros if no features are selected.
+    if not np.any(support):
+        return w
+
+    # Refit least squares on the selected features.
+    w[support] = ols_svd(X[:, support], y)
+
+    return w
+

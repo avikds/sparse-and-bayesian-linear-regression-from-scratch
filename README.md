@@ -28,6 +28,7 @@ python scaffold.py
 - [x] **16.** fista
 - [x] **17.** block_signal
 - [x] **18.** sensing_problem
+- [x] **19.** debias
 
 ---
 
