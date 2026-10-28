@@ -196,3 +196,17 @@ def ols_normal(X, y):
 
     return np.linalg.solve(A, b)
 
+# Step 3 - back_substitute
+def back_substitute(R, b):
+    """Solve the upper-triangular system Rw = b by back-substitution."""
+    R = np.asarray(R, dtype=float)
+    b = np.asarray(b, dtype=float)
+    n = b.shape[0]
+    w = np.zeros(n, dtype=float)
+
+    # Solve from the last row upward.
+    for i in range(n - 1, -1, -1):
+        w[i] = (b[i] - np.dot(R[i, i + 1:], w[i + 1:])) / R[i, i]
+
+    return w
+

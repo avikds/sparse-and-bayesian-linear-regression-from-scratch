@@ -12,6 +12,7 @@ python scaffold.py
 
 - [x] **1.** load_prostate
 - [x] **2.** ols_normal
+- [x] **3.** back_substitute
 
 ---
 
