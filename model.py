@@ -801,3 +801,28 @@ def group_soft_threshold(v, groups, t):
 
     return out
 
+# Step 22 - elastic_net
+def elastic_net(X, y, lam1, lam2, tol=1e-10, max_sweeps=5000):
+    """Fit elastic net by reducing it to lasso on augmented, scaled data."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    D = X.shape[1]
+
+    c = (1.0 + lam2) ** -0.5
+
+    # Augment the design matrix to incorporate the L2 penalty.
+    X_aug = c * np.vstack((X, np.sqrt(lam2) * np.eye(D)))
+    y_aug = np.concatenate((y, np.zeros(D)))
+
+    # lasso_cd minimizes 0.5 * squared_error + lambda * L1_norm.
+    w_scaled, _ = lasso_cd(
+        X_aug,
+        y_aug,
+        lam=c * lam1 / 2.0,
+        tol=tol,
+        max_sweeps=max_sweeps
+    )
+
+    # Transform the coefficients back to the elastic-net solution.
+    return c * w_scaled
+
