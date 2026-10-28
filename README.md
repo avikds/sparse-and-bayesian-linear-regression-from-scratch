@@ -17,6 +17,7 @@ python scaffold.py
 - [x] **5.** ols_svd
 - [x] **6.** conditioning_report
 - [x] **7.** ridge_augmented
+- [x] **8.** ridge_svd
 
 ---
 

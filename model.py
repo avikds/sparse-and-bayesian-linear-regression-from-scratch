@@ -293,3 +293,28 @@ def ridge_augmented(X, y, lam):
     # Solve the augmented least-squares problem using the existing QR solver.
     return ols_qr(X_aug, y_aug)
 
+# Step 8 - ridge_svd
+def ridge_svd(X, y, lams):
+    """Compute ridge solutions and effective degrees of freedom using one thin SVD."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    lams = np.atleast_1d(np.asarray(lams, dtype=float))
+
+    # Compute the thin SVD once and reuse it for every penalty.
+    U, s, Vt = np.linalg.svd(X, full_matrices=False)
+    Uy = U.T @ y
+    s_squared = s ** 2
+
+    W = np.empty((len(lams), X.shape[1]), dtype=float)
+    dof = np.empty(len(lams), dtype=float)
+
+    for k, lam in enumerate(lams):
+        # Apply ridge shrinkage to each singular-value component.
+        factors = s / (s_squared + lam)
+        W[k] = Vt.T @ (factors * Uy)
+
+        # Effective degrees of freedom for this penalty.
+        dof[k] = np.sum(s_squared / (s_squared + lam))
+
+    return W, dof
+
