@@ -33,6 +33,7 @@ python scaffold.py
 - [x] **21.** group_soft_threshold
 - [x] **22.** elastic_net
 - [x] **23.** lad_lp
+- [x] **24.** huber_irls
 
 ---
 

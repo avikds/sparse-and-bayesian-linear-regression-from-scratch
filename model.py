@@ -865,3 +865,30 @@ def lad_lp(X, y):
 
     return result.x[:D]
 
+# Step 24 - huber_irls
+def huber_irls(X, y, delta, n_iter=100):
+    """Fit Huber-loss regression using iteratively reweighted least squares."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    # Initialize with the ordinary least-squares solution.
+    w = ols_svd(X, y)
+
+    for _ in range(n_iter):
+        # Compute absolute residual magnitudes.
+        residuals = np.abs(y - X @ w)
+
+        # Assign weight 1 inside the Huber threshold and delta / |r| outside.
+        weights = np.ones_like(residuals)
+        mask = residuals > delta
+        weights[mask] = delta / residuals[mask]
+
+        # Solve weighted least squares by scaling rows with sqrt(weights).
+        sqrt_weights = np.sqrt(weights)
+        X_weighted = X * sqrt_weights[:, None]
+        y_weighted = y * sqrt_weights
+
+        w = ols_svd(X_weighted, y_weighted)
+
+    return w
+
