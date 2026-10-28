@@ -34,6 +34,7 @@ python scaffold.py
 - [x] **22.** elastic_net
 - [x] **23.** lad_lp
 - [x] **24.** huber_irls
+- [x] **25.** student_t_em
 
 ---
 

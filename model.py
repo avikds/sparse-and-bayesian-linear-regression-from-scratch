@@ -892,3 +892,33 @@ def huber_irls(X, y, delta, n_iter=100):
 
     return w
 
+# Step 25 - student_t_em
+def student_t_em(X, y, nu, n_iter=200):
+    """Fit Student-t linear regression using expectation-maximization."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    N = X.shape[0]
+
+    # Initialize weights with ordinary least squares and estimate noise variance.
+    w = ols_svd(X, y)
+    residuals = y - X @ w
+    sigma2 = float(np.mean(residuals ** 2))
+
+    for _ in range(n_iter):
+        # E-step: estimate the latent precision weights.
+        residuals = y - X @ w
+        z = (nu + 1.0) / (nu + residuals ** 2 / sigma2)
+
+        # M-step: solve weighted least squares using scaled rows.
+        sqrt_z = np.sqrt(z)
+        X_weighted = X * sqrt_z[:, None]
+        y_weighted = y * sqrt_z
+        w = ols_svd(X_weighted, y_weighted)
+
+        # Update the noise variance using the new regression weights.
+        residuals = y - X @ w
+        sigma2 = float(np.mean(z * residuals ** 2))
+
+    return w, sigma2
+
