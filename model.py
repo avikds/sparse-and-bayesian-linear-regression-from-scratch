@@ -922,3 +922,27 @@ def student_t_em(X, y, nu, n_iter=200):
 
     return w, sigma2
 
+# Step 26 - blr_posterior
+def blr_posterior(X, y, m0, S0, sigma2):
+    """Compute the Gaussian posterior mean and covariance for Bayesian linear regression."""
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float).reshape(-1)
+    m0 = np.asarray(m0, dtype=float)
+    S0 = np.asarray(S0, dtype=float)
+
+    D = X.shape[1]
+    I = np.eye(D)
+
+    # Compute the prior precision without explicitly forming an inverse.
+    S0_inv = np.linalg.solve(S0, I)
+
+    # Posterior precision and covariance.
+    precision_N = S0_inv + (X.T @ X) / sigma2
+    SN = np.linalg.solve(precision_N, I)
+
+    # Posterior mean.
+    rhs = S0_inv @ m0 + (X.T @ y) / sigma2
+    mN = np.linalg.solve(precision_N, rhs)
+
+    return mN, SN
+
